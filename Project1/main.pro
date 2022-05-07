@@ -21,6 +21,7 @@ minimum_of_list([H | T], Min0, Min) :-
 % 10 points
 % find_nearest_type(+State, +ObjectType, -ObjKey, -Object, -Distance) :- .
 
+% Sets Object and its key to the object with key, if the dist is smaller than the ol minimum.
 check_dists(NewDist, OldDist, NewKey, _, NewObj, _, NewDist, NewKey, NewObj) :-
     NewDist =< OldDist.
 
@@ -42,7 +43,7 @@ iterate_list_and_calculate_distances([Head | Tail], ObjectDict, AgentDict, MinKe
 
 find_nearest_type([AgentDict, ObjectDict, _], ObjectType, ObjKey, Object, Distance) :-
     findall(X, ObjectDict.X.type=ObjectType, Keys),
-    iterate_list_and_calculate_distances(Keys, ObjectDict, AgentDict, ObjKey, Distance, Object).
+    iterate_list_and_calculate_distances(Keys, ObjectDict, AgentDict, ObjKey, Distance, Object), !.
     % write_ln(Distances),
     % minimum_of_list(Distances, Distance).
     
@@ -54,6 +55,8 @@ find_nearest_type([AgentDict, ObjectDict, _], ObjectType, ObjKey, Object, Distan
 
 % 10 points
 % navigate_to(+State, +X, +Y, -ActionList, +DepthLimit) :- .
+
+% appen to list n times.
 append_n(List1, List2, List2,0).
 append_n(List1, List2, ListOut,1) :-
     append(List1, List2, ListOut), !.
@@ -62,42 +65,6 @@ append_n(List1, List2, ListOut, N) :-
     X is N-1,
     append_n(List1, List2, NewListOut, X),
     append(List1, NewListOut, ListOut).
-
-% navigate_to_y([AgentDict, _, _], _, Dy, ActionList, DepthLimit) :-
-%     DepthLimit > 0,
-%     AgentDict.y > Dy,
-%     N is AgentDict.y - Dy,
-%     NewDepthLimit is DepthLimit - (AgentDict.y - Dy),
-%     NewDepthLimit >= 0,
-%     append_n([go_up], [], ActionList, N).
-
-
-% navigate_to_y([AgentDict, _, _], _, Dy, ActionList, DepthLimit) :-
-%     DepthLimit > 0,
-%     AgentDict.y < Dy,
-%     N is Dy - AgentDict.y,
-%     NewDepthLimit is DepthLimit - (Dy - AgentDict.y),
-%     NewDepthLimit >= 0,
-%     append_n([go_down], [], ActionList, N).
-
-
-
-% navigate_to([AgentDict, ObjectDict, _], Dx, Dy, ActionList, DepthLimit) :-
-%     DepthLimit > 0,
-%     AgentDict.x > Dx,
-%     N is AgentDict.x - Dx,
-%     NewDepthLimit is DepthLimit - (AgentDict.x - Dx),
-%     navigate_to_y([AgentDict, ObjectDict, _], Dx, Dy, List, NewDepthLimit),
-%     append_n([go_left], List, ActionList, N).
-
-
-% navigate_to([AgentDict, ObjectDict, _], Dx, Dy, ActionList, DepthLimit) :-
-%     DepthLimit > 0,
-%     Dx > AgentDict.x,
-%     N is Dx - AgentDict.x,
-%     NewDepthLimit is DepthLimit - (Dx - AgentDict.x),
-%     navigate_to_y([AgentDict, ObjectDict, _], Dx, Dy, List, NewDepthLimit),
-%     append_n([go_right], List, ActionList, N).
 
 navigate_to([AgentDict, ObjectDict, T], Dx, Dy, ActionList, DepthLimit) :-
     Ax is AgentDict.x - Dx,
@@ -118,12 +85,13 @@ navigate_to([AgentDict, ObjectDict, T], Dx, Dy, ActionList, DepthLimit) :-
         append_n([go_down], List, ActionList, Ny)
         );
         (append_n([go_up], List, ActionList, Ny))
-    ).
+    ), !.
 
 % 10 points
 % chop_nearest_tree(+State, -ActionList) :- .
 insert_at_end(X,Y,Z) :- append(Y,X,Z).
 
+% appends to lists end n times.
 append_end_n(List1, List2, ListOut,1) :-
     !,
     insert_at_end(List1, List2, ListOut).
@@ -163,21 +131,7 @@ gather_nearest_food([AgentDict, ObjectDict, T], ActionList) :-
 % 10 points
 % collect_requirements(+State, +ItemType, -ActionList) :- .
 
-% collect_for_item([log, Amount], ActionList) :-
-%     %  chop nearest tree Amount times.
-
-% collect_for_item(AgentDict, [stone, Amount], ActionList) :-
-    
-% collect_for_item(AgentDict, [stick, Amount], ActionList) :-
-
-
-% collect_for_list(AgentDict, [], []).
-% collect_for_list(AgentDict, [H | T], ActionList, NewAgentDict) :-
-%     collect_for_list(AgentDict, T, List, Mid),
-%     collect_for_item(AgentDict, H, ItemList),
-%     append(ItemList, List, ActionList),
-%     make_moves(Mid2, ItemList, NewAgentDict).
-
+% counts amount of items in map.
 count_type_in_map(ObjectDict, Type, Count) :-
     findall(X, ObjectDict.X.type=Type, Keys),
     length(Keys, Count).
@@ -188,6 +142,7 @@ has_enough(ObjectDict, [[Type, Count] | T]) :-
     Count =< TypeCount,
     has_enough(ObjectDict, T).
 
+% given requirement, returns how many of each item the agent will need.
 agent_will_need(AgentDict, [], []).
 agent_will_need(AgentDict, [[Type, Count] | Tail], OutReqList) :-
     agent_will_need(AgentDict, Tail, List),
@@ -214,7 +169,7 @@ is_empty([]).
 collect_requirements([AgentDict, ObjectDict, _], stick, ActionList) :-
         chop_nearest_tree([AgentDict, ObjectDict, _], ActionList).
 
-% TODO: mine stone only checks for stone, might need single cobble so check for that too.
+
 collect_requirements([AgentDict, ObjectDict, T], Type, ActionList) :-
     (not(has(Type, 1, AgentDict.inventory))) -> (
         item_info(Type, R, _),
@@ -268,12 +223,13 @@ collect_requirements([AgentDict, ObjectDict, T], Type, ActionList) :-
             (ActionList=[])
         )
     );
-    (ActionList=[]).
+    (ActionList=[]), !.
 
 
 % 5 points
 % find_castle_location(+State, -XMin, -YMin, -XMax, -YMax) :- .
 
+% tile_occuped/3 stll checks if the item in tile is blocking.
 my_tile_occupied(X, Y, State) :-
     State = [_, StateDict, _],
     get_dict(_, StateDict, Object),
