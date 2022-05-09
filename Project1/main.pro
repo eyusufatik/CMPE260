@@ -192,7 +192,7 @@ collect_requirements([AgentDict, ObjectDict, T], Type, ActionList) :-
                 (
                     
                     (member([cobblestone, _], Reqs)) -> (
-                        mine_nearest_stone(AfterLogActionsState, StoneActions)    
+                        mine_nearest_stone(AfterLogActionsState, StoneActions)
                     );
                     (StoneActions=[])
                 ),
@@ -271,23 +271,7 @@ find_castle_location([AgentDict, ObjectDict, T], Xmin, Ymin, Xmax, Ymax) :-
 % make_castle(+State, -ActionList) :- 
 
 make_castle([AgentDict, ObjectDict, T], ActionList) :-
-    find_castle_location([AgentDict, ObjectDict, T], Xmin, Ymin, Xmax, Ymax),
-    % Requirements = [[cobblestone, 9]],
-    % agent_will_need(AgentDict, Requirements, AgentNeeds),
-    % write_ln(AgentNeeds), % [[cobblestone, N]]
-    % AgentNeeds = [[cobblestone, NeededCobbles]],
-    % findall(
-    %     X,
-    %     ObjectDict.X.type = stone,
-    %     StoneList
-    % ),
-    % findall(
-    %     Y,
-    %     ObjectDict.Y.type = cobblestone,
-    %     CobbleList    
-    % ),
-    % length(StoneList, StonesInMap),
-    % length(CobbleList, CobblesInMap),
+   
     mine_nearest_stone([AgentDict, ObjectDict, T], FirstStoneActions),
     execute_actions([AgentDict, ObjectDict, T], FirstStoneActions, AfterFirstStoneState),
 
@@ -296,7 +280,9 @@ make_castle([AgentDict, ObjectDict, T], ActionList) :-
 
     mine_nearest_stone(AfterSecondStoneState, ThirdStoneActions),
     execute_actions(AfterSecondStoneState, ThirdStoneActions, AfterThirdStoneState),
-    write_ln(AfterThirdStoneState),
+
+    find_castle_location(AfterThirdStoneState, Xmin, Ymin, Xmax, Ymax),
+    
     [A, _, _] = AfterThirdStoneState,
     
     Ox is Xmin + 1,
